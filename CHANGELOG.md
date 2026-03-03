@@ -1,44 +1,54 @@
 # 📝 Changelog
 
+## [2.0.0] - 2026-03-04
+
+### ✨ New Features
+- **UI Berbasis Tombol** — Menu utama permanen di bawah chat menggunakan Reply Keyboard, user tidak perlu tahu format `/command` apapun
+- **Tombol Statistik** — Tap 📈 Statistik → pilih periode (7/14/30/90 hari) via inline keyboard
+- **Tombol Kelola Habit** — Semua operasi habit (tambah, edit, hapus, arsip, reset, reorder) dapat diakses lewat satu menu inline
+- **Tombol Reminder** — Set, cek status, dan matikan reminder via inline keyboard; bot minta input waktu secara interaktif
+- **Fitur Broadcast Admin** — `/broadcast <pesan>` untuk kirim pesan ke seluruh user (khusus admin via `ADMIN_ID` di `.env`)
+- **`/menu`** — Command baru untuk memunculkan kembali keyboard utama kapan saja
+
+### 🐛 Bug Fixes
+- **Fix Tingkat di `/stats`** — Sebelumnya selalu menampilkan persentase "sepanjang masa" meskipun user memilih 7 hari; sekarang dihitung sesuai periode yang dipilih
+
+### 🗑️ Removed
+- Referensi Leaderboard dihapus dari roadmap (fitur tidak jadi diimplementasi)
+
+### 🔧 Technical
+- `src/utils/keyboard.js` — Ditambah `mainMenu`, `habitMenuKeyboard()`, `habitSelectKeyboard()`, `statsKeyboard()`, `reminderMenuKeyboard()`
+- `src/handlers/broadcast.js` — File baru, handler broadcast admin
+- `src/db/queries/users.js` — Ditambah `getAllUsers` query untuk keperluan broadcast
+- `src/handlers/stats.js` — Ditambah helper `buildStatsText()`, callback `stats_N`, regex handler tombol `📈 Statistik`
+- `src/handlers/checkin.js` — Regex diperluas menangkap tombol `✅ Check-in`
+- `src/handlers/reminder.js` — Ditambah `reminderMenuKeyboard`, `pendingReminderSet` state, callback `rmenu_*`, message handler interaktif
+- `bot.js` — Import `mainMenu`, combine regex `/start|/menu`, import & register `broadcastHandler`
+
+---
+
 ## [1.1.0] - 2026-03-03
 
 ### 🐛 Bug Fixes
-- **CRITICAL** — Fix `/habit add` tidak menyimpan data (`saveHabits(loadHabits())` diganti ke `loadUser()` pattern yang benar)
-- **CRITICAL** — Tambah `dotenv` ke dependencies dan `require('dotenv').config()` — token sebelumnya tidak pernah terbaca dari `.env`
-- **CRITICAL** — Bot sekarang exit dengan pesan jelas jika `TELEGRAM_BOT_TOKEN` kosong
-- Fix `userData.archive` crash pada user lama yang tidak punya field `archive` — auto-inisialisasi sekarang
-- Fix `calculateStreak()` tidak validasi apakah target per hari terpenuhi — sekarang cek `count >= target`
+- **CRITICAL** — Fix `/habit add` tidak menyimpan data
+- **CRITICAL** — Tambah `dotenv` ke dependencies, token sebelumnya tidak terbaca dari `.env`
+- **CRITICAL** — Bot exit dengan pesan jelas jika `TELEGRAM_BOT_TOKEN` kosong
+- Fix `userData.archive` crash pada user lama yang tidak punya field `archive`
+- Fix `calculateStreak()` tidak validasi apakah target per hari terpenuhi
 - Fix `getStats()` tidak validasi target per hari
-- Fix `/habit history` menggunakan `slice(-days)` yang tidak akurat — sekarang pakai loop kalender
+- Fix `/habit history` menggunakan `slice(-days)` yang tidak akurat
 - Fix status ikon di `/habits` menggunakan `includes()` bukan validasi count
-- Fix `generateId()` tidak menghitung ID dari arsip — bisa menyebabkan ID collision
+- Fix `generateId()` tidak menghitung ID dari arsip
 
 ### ✨ New Features
-- `/habit unarchive <nama|id>` — pulihkan habit dari arsip (sebelumnya tidak ada handler)
+- `/habit unarchive <nama|id>` — pulihkan habit dari arsip
 - `/archives` — lihat semua habit yang diarsipkan
 - `/habit reset <nama|id>` — hapus semua check-in sebuah habit
-- Delete konfirmasi — `/habit delete` tampilkan tombol inline Ya/Batal sebelum hapus
+- Delete konfirmasi dengan tombol inline Ya/Batal
 - Keyboard `/check` otomatis update setelah check-in diklik
 - Streak icons — 💤🔥⚡🏅🏆 berdasarkan panjang streak
-- Notifikasi `🎉 Semua habit selesai!` di `/progress` jika semua target terpenuhi
-- Hint `/habit` (tanpa sub-command) menampilkan daftar sub-command
+- Notifikasi `🎉 Semua habit selesai!` di `/progress`
 - `SIGINT` handler — bot berhenti bersih saat `Ctrl+C`
-
-### 📱 Commands (Lengkap v1.1.0)
-- `/start` — Welcome message + daftar command
-- `/help` — Panduan lengkap
-- `/habits` / `/habit list` — List semua habit aktif
-- `/check` — Check-in hari ini (inline buttons)
-- `/progress` — Progress hari ini
-- `/stats` — Statistik 7 hari
-- `/habit add` — Tambah habit baru
-- `/habit edit` — Edit habit
-- `/habit delete` — Hapus habit (dengan konfirmasi) ✨ updated
-- `/habit archive` — Arsipkan habit
-- `/habit unarchive` — Pulihkan dari arsip ✨ baru
-- `/archives` — Lihat daftar arsip ✨ baru
-- `/habit reset` — Reset check-in ✨ baru
-- `/habit history` — Lihat history per hari ✨ updated
 
 ---
 
@@ -46,41 +56,10 @@
 
 ### ✨ Added
 - Habit management (add, edit, delete, archive)
-- Daily check-in with inline buttons
-- Progress tracking with visual progress bar
+- Daily check-in dengan inline buttons
+- Progress tracking dengan visual progress bar
 - Weekly statistics
 - Habit history view
-- Multi-user support (automatic data separation)
+- Multi-user support
 - JSON file storage
 - PM2 auto-start support
-
-### 🎨 Features
-- Custom emoji untuk setiap habit
-- Daily target setting
-- Streak counter
-- Progress bar visualization `███░░`
-- Command `/help` dengan panduan lengkap
-
-### 🚀 Deployment
-- Setup script untuk DigitalOcean droplet
-- PM2 integration untuk auto-start
-- Environment variable support
-
-## 🚧 Roadmap (Coming Soon)
-
-### [1.2.0]
-- [ ] Daily reminder otomatis (cron job)
-- [ ] Pesan motivasi pagi
-- [ ] Statistik 30 hari
-- [ ] Best streak per habit
-- [ ] Milestone celebration (7, 14, 30, 100 hari)
-- [ ] Level sistem (Beginner → Master)
-
-### [2.0.0]
-- [ ] Export/import data (CSV/JSON)
-- [ ] Habit mingguan (X kali/minggu)
-- [ ] Skip hari tanpa putus streak
-- [ ] Database support (SQLite / PostgreSQL)
-- [ ] Webhook support
-
----

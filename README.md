@@ -1,29 +1,31 @@
-# 🎯 Habit Tracker Telegram Bot
+# 🎯 Lunero Habit Tracker Bot
 
-Bot Telegram untuk membantu teman-teman membangun kebiasaan baru dan menjaga disiplin.
+Bot Telegram untuk membantu membangun kebiasaan baru dan menjaga konsistensi — dirancang untuk orang awam, cukup tap tombol tanpa perlu hafal perintah.
 
-## ✨ Features
+---
 
-- **Tambah Habit Baru** — `/habit add "Nama habit"`
-- **List Semua Habit** — `/habits` atau `/habit list`
-- **Check-in Daily** — `/check` (tombol inline, auto-update count)
-- **Progress Hari Ini** — `/progress` (progress bar visual + notif semua selesai)
-- **Statistik** — `/stats` (mingguan, validasi target per hari)
-- **Edit Habit** — `/habit edit <nama|id> --option value`
-- **Delete Habit** — `/habit delete <nama|id>` (dengan konfirmasi)
-- **Archive Habit** — `/habit archive <nama|id>`
-- **Lihat Arsip** — `/archives`
-- **Pulihkan Arsip** — `/habit unarchive <nama|id>`
-- **Reset Check-in** — `/habit reset <nama|id>`
-- **History Habit** — `/habit history <nama|id> --days 7` (kalender per hari)
-- **Streak Icons** — 🔥⚡🏅🏆 berdasarkan panjang streak
+## ✨ Fitur
+
+- **UI Berbasis Tombol** — Menu utama muncul otomatis di bawah keyboard, tidak perlu ketik `/command`
+- **Check-in Harian** — Tap habit yang sudah dilakukan, auto-update hitungan
+- **Progress Hari Ini** — Progress bar visual + notif semua selesai
+- **Statistik Fleksibel** — Pilih periode 7, 14, 30, atau 90 hari; tingkat dihitung sesuai periode
+- **Manajemen Habit** — Tambah, edit, hapus, arsipkan, salin, urutkan ulang
+- **Streak & Badges** — Ikon streak 🔥⚡🏅🏆, sistem level, milestone badge
+- **Reminder Harian** — Set jam reminder lewat tombol, tanpa ketik command
+- **Export CSV** — Export semua data ke file CSV
+- **Broadcast Admin** — Admin bisa kirim pesan ke semua user sekaligus
+- **Multi-user** — Setiap user punya data terpisah secara otomatis
+- **Database SQLite** — Data tersimpan via `better-sqlite3`
+
+---
 
 ## 🚀 Quick Start
 
 ### 1. Install Node.js (jika belum ada)
 
 ```bash
-# Via NVM (direkomendasikan, tanpa sudo)
+# Via NVM (direkomendasikan)
 curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 source ~/.bashrc
 nvm install 20
@@ -38,192 +40,141 @@ npm install
 
 ### 3. Setup Environment
 
-Copy `.env.example` ke `.env`:
-
 ```bash
 cp .env.example .env
 nano .env
 ```
 
-Masukkan token bot dari [@BotFather](https://t.me/BotFather):
+Isi file `.env`:
 
-```
+```env
+# Token bot dari @BotFather
 TELEGRAM_BOT_TOKEN=123456789:ABCdefGHIjklMNOpqrsTUVwxyz
+
+# Telegram User ID kamu sebagai admin (untuk /broadcast)
+# Cara cek: kirim pesan ke @userinfobot di Telegram
+ADMIN_ID=123456789
 ```
 
-### 4. Run Bot
+### 4. Jalankan Bot
 
 ```bash
 npm start
 ```
 
-Output yang benar:
+---
+
+## 🖥️ Tampilan UI
+
+Saat user kirim `/start` atau `/menu`, muncul tombol permanen di bawah chat:
+
 ```
-🚀 Habit Tracker Bot is running...
-📱 Token: 123456789...
+[✅ Check-in]     [📊 Progress  ]
+[📈 Statistik]    [🏅 Badges    ]
+[🎯 Kelola Habit] [⏰ Reminder  ]
+[📤 Export]       [❔ Bantuan   ]
 ```
 
-> ⚠️ Jika muncul `EFATAL: AggregateError` — pastikan tidak ada instance bot lain yang berjalan dengan token yang sama (misalnya di server).
+Setiap tombol memunculkan menu lebih lanjut — user cukup tap, tanpa perlu tahu format perintah apapun.
 
-## 📋 Commands Guide
+---
 
-### Habit Management
+## 📋 Panduan Fitur
 
-**Tambah Habit:**
-```
-/habit add "Boxing" --emoji 🥊
-/habit add "Baca buku" --target 2 --emoji 📚
-```
-> `--target` = jumlah check-in per hari (default: 1)
+### ✅ Check-in
+Tap **✅ Check-in** → Daftar habit hari ini muncul sebagai tombol. Tap habit yang sudah dilakukan. Tap lagi untuk undo.
 
-**List Habit:**
+### 📊 Progress
+Tap **📊 Progress** → Ringkasan semua habit hari ini lengkap dengan progress bar dan streak.
+
+### 📈 Statistik
+Tap **📈 Statistik** → Pilih periode:
+
 ```
-/habits
-/habit list
+[7 Hari]  [14 Hari]
+[30 Hari] [90 Hari]
 ```
 
-**Check-in:**
-```
-/check
-```
-Bot tampilkan tombol inline. Tombol otomatis update count setelah diklik.
-
-**Progress:**
-```
-/progress
-```
 Contoh output:
 ```
-📊 Progress Hari Ini
-2026-03-03
+📈 Statistik 7 Hari Terakhir
 
-✅ 🥊 Boxing
-██████████ 2/2 (100%)
-
-⬜ 📚 Baca buku
-█████░░░░░ 1/2 (50%)
-
-🎉 Semua habit selesai hari ini! Keren!  ← muncul jika semua selesai
+🥊 Boxing
+  ███████░░░ 5/6 hari
+  🔥 Streak: 3 | Best: 7
+  Tingkat: 83% (7 hari terakhir)
 ```
 
-**Statistik:**
-```
-/stats
-```
-Menampilkan statistik 7 hari untuk setiap habit, termasuk streak dan completion rate.
+> Tingkat dihitung sesuai periode yang dipilih, bukan sepanjang masa.
 
-**Edit Habit:**
-```
-/habit edit 1 --name "Boxing Malam"
-/habit edit "Boxing" --target 3
-/habit edit 1 --emoji 🥋
-```
+### 🎯 Kelola Habit
+Tap **🎯 Kelola Habit** → menu inline:
 
-**Hapus Habit** (ada konfirmasi Ya/Batal):
-```
-/habit delete 1
-/habit delete "Boxing"
-```
-
-**Archive Habit:**
-```
-/habit archive 1
-/habit archive "Boxing"
-```
-
-**Lihat Arsip:**
-```
-/archives
-```
-
-**Pulihkan dari Arsip:**
-```
-/habit unarchive 1
-/habit unarchive "Boxing"
-```
-
-**Reset Check-in:**
-```
-/habit reset 1
-/habit reset "Boxing"
-```
-Menghapus semua riwayat check-in, streak kembali ke 0.
-
-**History:**
-```
-/habit history 1
-/habit history "Boxing" --days 14
-```
-Contoh output:
-```
-📜 History: 🥊 Boxing
-
-📊 7 hari terakhir: 5/7 hari selesai
-🔥 Streak saat ini: 3 hari
-✅ Total check-in: 24 kali
-
-📅 Detail per hari:
-✅ 2026-03-03  ██████████ 2/2
-✅ 2026-03-02  ██████████ 2/2
-⬜ 2026-03-01  █████░░░░░ 1/2
-```
-
-### System Commands
-
-| Command | Fungsi |
+| Tombol | Fungsi |
 |---|---|
-| `/start` | Welcome message + daftar command |
-| `/help` | Panduan lengkap |
-| `/habits` | List semua habit aktif |
-| `/check` | Check-in hari ini |
-| `/progress` | Progress hari ini |
-| `/stats` | Statistik 7 hari |
-| `/archives` | Daftar habit yang diarsipkan |
+| ➕ Tambah Habit | Ketik nama + emoji + target |
+| 📋 Daftar Habit | Lihat semua habit aktif |
+| ✏️ Edit | Pilih habit → ubah nama/emoji/target/kategori |
+| 🗑️ Hapus | Pilih habit → konfirmasi Ya/Batal |
+| 📦 Arsipkan | Pindahkan habit ke arsip |
+| 📂 Lihat Arsip | Daftar habit yang diarsipkan |
+| ♻️ Pulihkan Arsip | Kembalikan habit dari arsip |
+| 🔄 Reset | Hapus semua check-in habit |
+| ↕️ Urutkan Ulang | Atur urutan tampilan habit |
 
-## 💾 Data Structure
+**Format tambah habit:**
+```
+Nama Habit 🎯 1
+```
+_(nama spasi emoji spasi target per hari)_
 
-Data disimpan dalam `data/habits.json`:
+### ⏰ Reminder
+Tap **⏰ Reminder** → menu inline:
 
-```json
-{
-  "123456789": {
-    "habits": [
-      {
-        "id": 1,
-        "name": "Boxing",
-        "emoji": "🥊",
-        "target": 2,
-        "checkins": ["2026-03-01", "2026-03-01", "2026-03-02", "2026-03-02"],
-        "createdAt": "2026-02-26T00:00:00.000Z"
-      }
-    ],
-    "archive": [
-      {
-        "id": 2,
-        "name": "Lari Pagi",
-        "emoji": "🏃",
-        "target": 1,
-        "checkins": ["2026-02-20"],
-        "createdAt": "2026-02-20T00:00:00.000Z",
-        "archivedAt": "2026-03-01T00:00:00.000Z"
-      }
-    ],
-    "createdAt": "2026-02-26T00:00:00.000Z"
-  }
-}
+| Tombol | Fungsi |
+|---|---|
+| ⏰ Set Reminder | Ketik waktu, misal `07:00` |
+| 📋 Status | Cek apakah reminder aktif |
+| 🔕 Matikan | Nonaktifkan reminder |
+
+### 📤 Export
+Tap **📤 Export** → Bot langsung kirim file `.csv` berisi semua data habit dan check-in.
+
+### 🏅 Badges & Level
+
+| Level | Syarat Streak |
+|---|---|
+| 🌱 Pemula | < 7 hari |
+| 🔥 Konsisten | 7–13 hari |
+| ⚡ Berdedikasi | 14–29 hari |
+| 🏅 Ahli | 30–59 hari |
+| 🏆 Master | 60+ hari |
+
+---
+
+## 📢 Broadcast Admin
+
+Admin (sesuai `ADMIN_ID` di `.env`) bisa kirim pesan ke **seluruh user** sekaligus:
+
+```
+/broadcast Pesan kamu di sini
 ```
 
-> `checkins` menyimpan tanggal setiap check-in. Multi check-in per hari didukung untuk habit dengan `target > 1`.
+Contoh:
+```
+/broadcast Server akan maintenance malam ini pukul 23.00. Mohon maaf atas ketidaknyamanannya.
+```
 
-## 🔄 Auto-start with PM2
+Bot melaporkan berapa user yang berhasil/gagal menerima pesan.
 
-Install PM2:
+> Cara cek Telegram User ID: kirim pesan ke [@userinfobot](https://t.me/userinfobot)
+
+---
+
+## 🔄 Auto-start dengan PM2
+
 ```bash
 npm install -g pm2
-```
-
-Start bot:
-```bash
 pm2 start bot.js --name habit-bot
 pm2 save
 pm2 startup
@@ -235,36 +186,51 @@ pm2 logs habit-bot
 pm2 status
 ```
 
-## 🎨 Customization
+---
 
-### Streak Icons
+## 🗂️ Struktur Proyek
 
-Di `bot.js`, fungsi `getStreakIcon()`:
-
-| Streak | Icon |
-|---|---|
-| 0 hari | 💤 |
-| 1–6 hari | 🔥 |
-| 7–13 hari | ⚡ |
-| 14–29 hari | 🏅 |
-| 30+ hari | 🏆 |
-
-### Progress Bar
-
-Karakter bar ada di fungsi `getProgressBar()` di `bot.js`:
-```javascript
-return '█'.repeat(filled) + '░'.repeat(empty);
+```
+habit-tracker-main/
+├── bot.js                    # Entry point, main menu, /start, /help, /menu
+├── .env                      # Token bot & Admin ID (tidak di-commit)
+├── .env.example              # Template environment
+├── package.json
+├── data/
+│   └── habits.db             # Database SQLite
+└── src/
+    ├── db/
+    │   ├── index.js
+    │   ├── migrations/
+    │   │   └── 001_init.sql
+    │   └── queries/
+    │       ├── habits.js
+    │       ├── checkins.js
+    │       └── users.js
+    ├── handlers/
+    │   ├── broadcast.js       # /broadcast (admin only)
+    │   ├── checkin.js         # ✅ Check-in
+    │   ├── habit.js           # 🎯 Kelola Habit
+    │   ├── reminder.js        # ⏰ Reminder
+    │   └── stats.js           # 📊 Progress, 📈 Statistik
+    ├── services/
+    │   ├── gamification.js
+    │   └── streak.js
+    └── utils/
+        ├── format.js
+        ├── keyboard.js        # Semua definisi keyboard (reply + inline)
+        └── middleware.js
 ```
 
-## 📱 Multi-User Support
+---
 
-Bot ini sudah mendukung multi-user otomatis. Setiap user Telegram akan memiliki data terpisah berdasarkan `chatId`.
+## 🔒 Keamanan
 
-## 🔒 Security
+- Token bot dan Admin ID disimpan di `.env`
+- `.env` tidak di-commit ke Git
+- Set permission: `chmod 600 .env`
 
-- Token bot disimpan dalam file `.env`
-- Tidak disimpan dalam version control
-- File `.env` tidak di-commit ke Git
+---
 
 ## 🐛 Troubleshooting
 
@@ -273,41 +239,23 @@ Bot ini sudah mendukung multi-user otomatis. Setiap user Telegram akan memiliki 
 - Pastikan `npm install` sudah dijalankan
 - Cek log: `pm2 logs habit-bot`
 
-**`EFATAL: AggregateError` saat jalankan lokal:**
-- Ada instance bot lain yang berjalan dengan token yang sama
-- Stop bot di server dulu: `pm2 stop habit-bot` (via SSH ke droplet)
-- Atau gunakan token bot berbeda untuk testing lokal
+**`EFATAL: AggregateError`:**
+- Ada dua instance bot berjalan dengan token yang sama
+- Stop dulu: `pm2 stop habit-bot`, lalu start ulang
 
 **`❌ TELEGRAM_BOT_TOKEN tidak ditemukan!`:**
-- File `.env` belum dibuat atau token masih default
-- Jalankan: `cp .env.example .env` lalu isi token yang benar
+- Buat `.env` dari template: `cp .env.example .env`, lalu isi token
 
-**Data hilang:**
-- Data tersimpan di `data/habits.json`
-- Backup berkala: `cp data/habits.json data/habits-backup-$(date +%Y%m%d).json`
+**Tombol tidak muncul:**
+- Kirim `/menu` atau `/start` untuk memunculkan kembali keyboard
 
-**`Cannot read properties of undefined`:**
-- Biasanya terjadi pada data user lama yang tidak punya field `archive`
-- Sudah difix di v1.1.0 — field `archive` otomatis dibuat jika belum ada
+---
 
 ## 📝 Roadmap
 
-- [ ] Daily reminder otomatis (cron job jam tertentu)
-- [ ] Pesan motivasi pagi
-- [ ] Statistik `/stats 30` untuk 30 hari
-- [ ] Best streak (rekor terpanjang per habit)
-- [ ] Level sistem (Beginner → Master)
-- [ ] Milestone celebration (7, 14, 30, 100 hari)
-- [ ] Habit mingguan (target X kali/minggu)
+- [ ] Habit mingguan (X kali/minggu)
 - [ ] Skip hari tanpa putus streak
-- [ ] Export data `/export` (JSON/CSV)
-- [ ] Import data `/import`
-- [ ] Catatan saat check-in
-- [ ] Database support (SQLite / PostgreSQL)
-
-## 👥 Contribute
-
-Feel free to fork and modify for your needs!
+- [ ] Webhook support
 
 ---
 

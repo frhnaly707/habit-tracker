@@ -1,239 +1,173 @@
-# 🚀 Deploy ke DigitalOcean Droplet
+# 🚀 Deploy ke Server (DigitalOcean / VPS)
 
-Panduan deploy Habit Tracker Bot v1.1.0 ke droplet DigitalOcean.
+Panduan deploy Lunero Habit Tracker Bot v2.0.0 ke server.
+
+---
 
 ## 📋 Prasyarat
 
-- Akses SSH ke droplet DigitalOcean
+- Akses SSH ke server / droplet
 - Token bot dari [@BotFather](https://t.me/BotFather)
-- Node.js >= 16 di droplet
+- Telegram User ID kamu (cek via [@userinfobot](https://t.me/userinfobot))
+- Node.js >= 18 di server
+
+---
 
 ## 🚀 Langkah Deploy
 
-### 1. SSH ke Droplet
+### 1. SSH ke Server
 
 ```bash
-ssh root@your-droplet-ip
+ssh root@your-server-ip
 ```
 
-### 2. Upload File ke Droplet
+### 2. Upload File ke Server
 
-**Opsi A: Via GitHub (direkomendasikan)**
+**Via GitHub (direkomendasikan):**
 
 ```bash
 # Di lokal — push ke GitHub dulu
 git add .
-git commit -m "update: v1.1.0 fixes and new features"
+git commit -m "deploy: v2.0.0"
 git push origin main
 
-# Di droplet — pull dari GitHub
-cd ~/habit-tracker
-git pull origin main
+# Di server — clone atau pull
+git clone https://github.com/USERNAME/REPO.git ~/habit-tracker
+# Atau jika sudah ada:
+cd ~/habit-tracker && git pull origin main
 ```
 
-**Opsi B: Upload dengan SCP**
+**Via SCP:**
 
 ```bash
-# Di lokal komputer:
-scp -r /path/to/habit-tracker-main/* root@your-droplet-ip:~/habit-tracker/
+scp -r /path/to/habit-tracker-main/* root@your-server-ip:~/habit-tracker/
 ```
 
-**Opsi C: Copy manual file**
-
-File yang perlu di-copy:
-- `bot.js`
-- `package.json`
-- `.env.example`
-- `.gitignore`
-- `setup.sh`
-
-### 3. Setup di Droplet
+### 3. Install Dependencies
 
 ```bash
 cd ~/habit-tracker
-
-# Install dependencies (termasuk dotenv yang baru)
 npm install
-
-# Atau gunakan setup script otomatis:
-chmod +x setup.sh
-./setup.sh
 ```
 
-Setup script akan:
-- ✅ Cek dan install Node.js
-- ✅ Install semua dependencies (`node-telegram-bot-api` + `dotenv`)
-- ✅ Setup PM2 (opsional)
-- ✅ Start bot otomatis
-
-### 4. Edit Token Bot
+### 4. Setup Environment
 
 ```bash
+cp .env.example .env
 nano .env
 ```
 
-Masukkan token bot:
-```
+Isi `.env`:
+
+```env
 TELEGRAM_BOT_TOKEN=123456789:ABCdefGHIjklMNOpqrsTUVwxyz
+ADMIN_ID=123456789
 ```
 
-Save: `Ctrl+O`, `Enter`, `Ctrl+X`
+> `ADMIN_ID` adalah Telegram User ID kamu untuk fitur `/broadcast`.
+> Cara cek: kirim pesan ke [@userinfobot](https://t.me/userinfobot)
 
-### 5. Start Bot
-
-**Manual:**
+Set permission:
 ```bash
-npm start
+chmod 600 .env
 ```
 
-**Dengan PM2 (auto-start):**
+### 5. Jalankan dengan PM2
+
 ```bash
+npm install -g pm2
 pm2 start bot.js --name habit-bot
 pm2 save
 pm2 startup
 ```
 
-### 6. Verify Bot
-
-1. Buka Telegram
-2. Cari bot yang kamu buat
-3. Send `/start`
-4. Seharusnya bot merespon dengan welcome message
-
-## 🔧 Management
-
-### Cek Status
+### 6. Verifikasi
 
 ```bash
 pm2 status
+pm2 logs habit-bot --lines 20
 ```
 
-### Lihat Logs
+Buka Telegram → cari bot → kirim `/start` → tombol keyboard harus muncul di bawah chat.
 
+---
+
+## 🔧 Management
+
+| Perintah | Fungsi |
+|---|---|
+| `pm2 status` | Cek status bot |
+| `pm2 logs habit-bot` | Lihat log real-time |
+| `pm2 restart habit-bot` | Restart bot |
+| `pm2 stop habit-bot` | Stop bot |
+| `pm2 delete habit-bot` | Hapus dari PM2 |
+
+---
+
+## 🔄 Update Bot
+
+```bash
+ssh root@your-server-ip
+cd ~/habit-tracker
+
+git pull origin main
+npm install
+pm2 restart habit-bot
+pm2 logs habit-bot --lines 20
+```
+
+---
+
+## 💾 Backup Database
+
+Data tersimpan di `data/habits.db` (SQLite). Backup berkala:
+
+```bash
+cp data/habits.db data/habits-backup-$(date +%Y%m%d).db
+```
+
+---
+
+## 🐛 Troubleshooting
+
+**Bot tidak merespon:**
 ```bash
 pm2 logs habit-bot
 ```
 
-### Restart Bot
-
+**`EFATAL: AggregateError` — conflict token:**
 ```bash
-pm2 restart habit-bot
-```
-
-### Stop Bot
-
-```bash
-pm2 stop habit-bot
-```
-
-### Delete Bot dari PM2
-
-```bash
-pm2 delete habit-bot
-```
-
-## 📊 Backup Data
-
-Data tersimpan di `data/habits.json`. Backup secara berkala:
-
-```bash
-cp data/habits.json backups/habits-$(date +%Y%m%d).json
-```
-
-## 🔒 Security
-
-- File `.env` berisi token bot sensitif
-- Jangan commit `.env` ke version control
-- Set permissions: `chmod 600 .env`
-
-## 🐛 Troubleshooting
-
-### Bot tidak merespon
-
-1. Cek token di `.env` sudah benar
-2. Cek log: `pm2 logs habit-bot`
-3. Restart: `pm2 restart habit-bot`
-
-### `EFATAL: AggregateError` — bot baru tidak bisa connect
-
-Penyebab: **2 instance bot berjalan dengan token yang sama.**
-
-```bash
-# Cek apakah bot lama masih jalan
-pm2 status
-
-# Stop dulu sebelum jalankan ulang
 pm2 stop habit-bot
 pm2 start bot.js --name habit-bot
 ```
 
-### `❌ TELEGRAM_BOT_TOKEN tidak ditemukan!`
-
+**`❌ TELEGRAM_BOT_TOKEN tidak ditemukan!`:**
 ```bash
-# Pastikan .env ada dan berisi token
-cat .env
-
-# Jika belum ada:
-cp .env.example .env
-nano .env
-# Isi: TELEGRAM_BOT_TOKEN=token_kamu
+cat .env   # pastikan token terisi
 ```
 
-### `Cannot find module 'dotenv'`
+**Tombol keyboard tidak muncul di user:**
+- Minta user kirim `/menu` atau `/start`
 
+**`Cannot find module`:**
 ```bash
 npm install
 pm2 restart habit-bot
 ```
 
-### Port conflict
-
-Bot menggunakan polling method, tidak perlu port publik.
-
-### Droplet out of memory
-
+**Out of memory:**
 ```bash
 pm2 start bot.js --name habit-bot --max-memory-restart 200M
 ```
 
-## 📱 Multi-user Deployment
+---
 
-Bot ini sudah multi-user ready. Untuk deploy multi-instance:
+## 🔒 Keamanan
 
-1. Deploy instance lain di droplet yang sama
-2. Gunakan port berbeda (kalau pakai webhook)
-3. Gunakan file data terpisah
-
-## 🔄 Update Bot (setelah ada perubahan kode)
-
-```bash
-# SSH ke droplet
-ssh root@your-droplet-ip
-
-# Pull update terbaru
-cd ~/habit-tracker
-git pull origin main
-
-# Install dependency baru jika ada
-npm install
-
-# Restart bot
-pm2 restart habit-bot
-
-# Verifikasi berjalan normal
-pm2 logs habit-bot --lines 20
-```
-
-## 🎯 Scaling
-
-Jika ingin scale ke banyak users:
-
-- **< 100 users:** JSON file sudah cukup
-- **100–1000 users:** Migrasi ke SQLite (`better-sqlite3`) — file-based, tanpa server
-- **> 1000 users:** PostgreSQL atau MongoDB
+- Jangan commit `.env` ke Git
+- `ADMIN_ID` hanya untuk satu user admin
+- Gunakan token berbeda untuk testing lokal vs production
 
 ---
 
 **Bot siap pakai!** 🚀
-
-Test bot dan share ke teman-temanmu!
