@@ -1,0 +1,24 @@
+{
+  "name": "habit-tracker-telegram-bot",
+  "version": "1.1.0",
+  "description": "Telegram Bot Habit Tracker untuk teman-teman yang membutuhkan disiplin",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "dev": "node bot.js"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "habit-tracker",
+    "productivity"
+  ],
+  "author": "ZeroClaw",
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^9.6.0",
+    "dotenv": "^16.4.5",
+    "node-cron": "^3.0.3",
+    "node-telegram-bot-api": "^0.66.0"
+  }
+}
