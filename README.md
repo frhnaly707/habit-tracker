@@ -259,4 +259,4 @@ habit-tracker-main/
 
 ---
 
-Made with ❤️ by ZeroClaw
+Made with ❤️
