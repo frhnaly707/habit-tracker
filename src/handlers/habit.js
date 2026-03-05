@@ -271,6 +271,7 @@ function register(bot) {
 
   // Callback: delete, reset, reorder, hmenu, hpick
   bot.on('callback_query', async (query) => {
+    try {
     const { data, from, message } = query;
     const userId = from.id;
     const chatId = message.chat.id;
@@ -421,18 +422,25 @@ function register(bot) {
       const habitId = parseInt(data.split('_')[1]);
       const habit = db.prepare('SELECT * FROM habits WHERE id=? AND user_id=?').get(habitId, userId);
       if (!habit) return bot.answerCallbackQuery(query.id, { text: '❌ Habit tidak ditemukan' });
+      // Hapus semua data terkait dulu (FK: skip_days, badges, checkins → habits)
+      db.prepare('DELETE FROM skip_days WHERE habit_id=?').run(habitId);
+      db.prepare('DELETE FROM badges WHERE habit_id=?').run(habitId);
       checkinQueries.deleteByHabit.run(habitId);
       habitQueries.remove.run(habitId, userId);
-      await bot.editMessageText(`🗑️ *${habit.emoji} ${habit.name}* dihapus.`, {
-        chat_id: chatId, message_id: message.message_id, parse_mode: 'Markdown'
-      });
+      try {
+        await bot.editMessageText(`🗑️ *${habit.emoji} ${habit.name}* dihapus.`, {
+          chat_id: chatId, message_id: message.message_id, parse_mode: 'Markdown'
+        });
+      } catch (_) {}
       return bot.answerCallbackQuery(query.id, { text: 'Dihapus.' });
     }
 
     if (data.startsWith('delcancel_')) {
-      await bot.editMessageText('❎ Penghapusan dibatalkan.', {
-        chat_id: chatId, message_id: message.message_id
-      });
+      try {
+        await bot.editMessageText('❎ Penghapusan dibatalkan.', {
+          chat_id: chatId, message_id: message.message_id
+        });
+      } catch (_) {}
       return bot.answerCallbackQuery(query.id, { text: 'Dibatalkan.' });
     }
 
@@ -441,16 +449,20 @@ function register(bot) {
       const habit = db.prepare('SELECT * FROM habits WHERE id=? AND user_id=?').get(habitId, userId);
       if (!habit) return bot.answerCallbackQuery(query.id, { text: '❌ Tidak ditemukan' });
       checkinQueries.deleteByHabit.run(habitId);
-      await bot.editMessageText(`♻️ *${habit.emoji} ${habit.name}* direset.`, {
-        chat_id: chatId, message_id: message.message_id, parse_mode: 'Markdown'
-      });
+      try {
+        await bot.editMessageText(`♻️ *${habit.emoji} ${habit.name}* direset.`, {
+          chat_id: chatId, message_id: message.message_id, parse_mode: 'Markdown'
+        });
+      } catch (_) {}
       return bot.answerCallbackQuery(query.id, { text: 'Reset berhasil.' });
     }
 
     if (data.startsWith('resetcancel_')) {
-      await bot.editMessageText('❎ Reset dibatalkan.', {
-        chat_id: chatId, message_id: message.message_id
-      });
+      try {
+        await bot.editMessageText('❎ Reset dibatalkan.', {
+          chat_id: chatId, message_id: message.message_id
+        });
+      } catch (_) {}
       return bot.answerCallbackQuery(query.id, { text: 'Dibatalkan.' });
     }
 
@@ -478,6 +490,16 @@ function register(bot) {
         });
       } catch (_) {}
       return bot.answerCallbackQuery(query.id, { text: dir === 'up' ? '⬆️ Naik' : '⬇️ Turun' });
+    }
+
+    // Tombol label habit di reorder (tidak perlu aksi apapun)
+    if (data.startsWith('reorder_noop_')) {
+      return bot.answerCallbackQuery(query.id);
+    }
+
+    } catch (err) {
+      console.error('callback_query error:', err.message, '| data:', query.data);
+      try { await bot.answerCallbackQuery(query.id, { text: '❌ Terjadi kesalahan.' }); } catch (_) {}
     }
   });
 
